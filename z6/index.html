@@ -1,0 +1,158 @@
+<html>
+<head>
+	<title>XO</title>
+	<link href="style.css" rel="stylesheet">
+	<script src="jquery-3.3.1.js"></script>
+</head>
+<body>
+
+<script>
+$(function(){
+	
+	//генерація ходу, випадковим чином визначаємо хто перший ходить хрестики чи нолики
+	var max = 1;
+	var min = 0;
+	var hid = Math.round(Math.random()*(max-min)+min);
+	
+	//ігрове поле будуємо у вигляді масиву 3х3
+	var area = [[],[],[]];
+	console.log(area);
+	
+	//оброблюємо подію натиску мишки на ігрове поле
+	$("table tr td").click(function(e){
+		//вставляємо картинку в комірку по якій натиснув гравець
+		$(e.target).html("<img src='i"+hid+".png' width='70' height='70'>");
+		
+		//визначаємо j-ту координату ходу(позицію в рядка)
+		var i = Math.floor(e.target.id/10);
+		//визначаємо i-ту координату ходу(номер рядка)
+		var j = e.target.id%10;
+		
+		//відображаємо хід на ігровому полю
+		area[i][j] = hid;
+		
+		//змінюємо картинку гравця
+		if(hid == 0){
+			hid=1;
+		}else{
+			hid=0;
+		}
+		WinSteps();
+		ResultGame();
+	});
+	
+	function WinSteps(){
+		/*-------------------Перевірка Хрестиків-------------------------*/
+		
+		//виграшні ходи по горизонталі
+		if((area[0][0]==1)&&(area[0][1]==1)&&(area[0][2]==1)){
+			$("#00, #01, #02").addClass("winX");
+			return 1;
+		}
+		if((area[1][0]==1)&&(area[1][1]==1)&&(area[1][2]==1)){
+			$("#10, #11, #12").addClass("winX");
+			return 1;
+		}
+		if((area[2][0]==1)&&(area[2][1]==1)&&(area[2][2]==1)){
+			$("#20, #21, #22").addClass("winX");
+			return 1;
+		}
+		//виграшні ходи по вертикалі
+		if((area[0][0]==1)&&(area[1][0]==1)&&(area[2][0]==1)){
+			$("#00, #10, #20").addClass("winX");
+			return 1;
+		}
+		if((area[0][1]==1)&&(area[1][1]==1)&&(area[2][1]==1)){
+			$("#01, #11, #21").addClass("winX");
+			return 1;
+		}
+		if((area[0][2]==1)&&(area[1][2]==1)&&(area[2][2]==1)){
+			$("#02, #12, #22").addClass("winX");
+			return 1;
+		}
+		//виграшні ходи навхрест
+		if((area[0][0]==1)&&(area[1][1]==1)&&(area[2][2]==1)){
+			$("#00, #11, #22").addClass("winX");
+			return 1;
+		}
+		if((area[0][2]==1)&&(area[1][1]==1)&&(area[2][0]==1)){
+			$("#02, #11, #20").addClass("winX");
+			return 1;
+		}
+		
+		/*-------------------Перевірка Ноликів-------------------------*/
+		
+		//виграшні ходи по горизонталі
+		if((area[0][0]==0)&&(area[0][1]==0)&&(area[0][2]==0)){
+			$("#00, #01, #02").addClass("winO");
+			return 0;
+		}
+		if((area[1][0]==0)&&(area[1][1]==0)&&(area[1][2]==0)){
+			$("#10, #11, #12").addClass("winO");
+			return 0;
+		}
+		if((area[2][0]==0)&&(area[2][1]==0)&&(area[2][2]==0)){
+			$("#20, #21, #22").addClass("winO");
+			return 0;
+		}
+		//виграшні ходи по вертикалі
+		if((area[0][0]==0)&&(area[1][0]==0)&&(area[2][0]==0)){
+			$("#00, #10, #20").addClass("winO");
+			return 0;
+		}
+		if((area[0][1]==0)&&(area[1][1]==0)&&(area[2][1]==0)){
+			$("#01, #11, #21").addClass("winO");
+			return 0;
+		}
+		if((area[0][2]==0)&&(area[1][2]==0)&&(area[2][2]==0)){
+			$("#02, #12, #22").addClass("winO");
+			return 0;
+		}
+		//виграшні ходи навхрест
+		if((area[0][0]==0)&&(area[1][1]==0)&&(area[2][2]==0)){
+			$("#00, #11, #22").addClass("winO");
+			return 0;
+		}
+		if((area[0][2]==0)&&(area[1][1]==0)&&(area[2][0]==0)){
+			$("#02, #11, #20").addClass("winO");
+			return 0;
+		}
+	}
+	
+	function ResultGame(){
+		if(WinSteps()==1){
+			$("#result").html("<font color='green'>Виграли ХРЕСТИКИ!</font><input id='restart' type='button' value='грати ще'>")
+		}else if(WinSteps()==0){
+			$("#result").html("<font color='orange'>Виграли НОЛИКИ!</font><input id='restart' type='button' value='грати ще'>")
+		}
+	}
+	
+	$("#result").click(function(){
+		location.reload();
+	});
+});
+</script>
+
+<h2 align="center">Хрестики - Нолики</h2>
+<table border="2"  cellspacing="0" align="center" cellpadding="3px">
+	<tr height="100px" align="center">
+		<td width="100px" id="00"></td>
+		<td width="100px" id="01"></td>
+		<td width="100px" id="02"></td>
+	</tr>
+	<tr height="100px" align="center">
+		<td id="10"></td>
+		<td id="11"></td>
+		<td id="12"></td>
+	</tr>
+	<tr height="100px" align="center">
+		<td id="20"></td>
+		<td id="21"></td>
+		<td id="22"></td>
+	</tr>
+</table>
+
+<h2 align='center' id="result"></h2>
+
+</body>
+</html>

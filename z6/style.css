@@ -1,0 +1,15 @@
+h2{
+	color:#0D47A1;
+}
+table{
+	border-color:#03a9f4;
+}
+.winX{
+	background-color:#c8e6c9;
+}
+.winO{
+	background-color:#f57f17ab;
+}
+#restart{
+	margin-left:4px;
+}
