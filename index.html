@@ -1,0 +1,505 @@
+  <!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="js\jquery-3.2.1.min.js"></script>
+    <style>
+      .pause{
+        visibility: hidden;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        width:99%;
+        height:99%;
+        background-color: #052d40de;
+        color:white;
+      }
+      #menu_game{
+        border: 2px solid #00bcd4;
+        padding:3px;
+        color:#00bcd4;
+      }
+      #kosmolet{
+        position:fixed;
+      }
+      #meteor{
+        position: fixed;
+      }
+
+     #display{
+      min-width: 257px;
+      position: fixed;
+      z-index: 1;
+      background-color: black;
+      border: 2px solid white;
+      width:20%;
+      color:white;
+      font-size: 20px;
+      padding-left: 5px;
+      padding-right: 7px;
+     }
+     #sleep{
+      background-color: grey;
+      color: white;
+     }
+     #continue{
+      background-color: green;
+      color: white;
+     }
+     #exit{
+      background-color: red;
+      color: white;
+     }
+    </style>
+  </head>
+  <body bgcolor="black">
+    <audio id="udar" src="audio/udar.wav"> </audio>
+
+    <iframe id="fon_music" src="audio/maximum.wav" allow="autoplay" id="audio" style="display:none"></iframe>
+
+
+    <img id="kosmolet" src="images/avalon1.png"/>
+
+    <!--Меню гри, та інформація-->
+    <div id="display">
+      <p align="center"><button id="sleep">Пауза</button>
+      <button id="continue">Продолжить</button>
+      <button id="exit">Выход</button></p>
+      <p align="center" id="menu_game"><b>Уровень: <span id="level">1</span></b></p>
+        <hr color="#00bcd4">
+      <p align="center"><b><u>Состояние корабля</u></b></p>
+      <p>Мощность щита: <span id="power_schit">100%</span></p>
+      <hr id="shcala_scita" align="left" width="100%" size="25px" color="green">
+    </div>
+
+    <!--Вікно паузи-->
+    <div class="pause">
+      <h1 align="center" id="message_window" style="margin-top: 23%;">Пауза</h1>
+    </div>
+
+    <script>
+      $(function(){
+        var timerId;
+        var num_level = 1;
+        var time = 0;
+        var result_time = 0;
+        //глобальна змінна для паузи
+        var stop = false;
+        //глобальна змінна для звуку
+        var sound = "";
+
+        //викликаємо функцію руху космічним кораблем
+        MoveUpDown();
+        //викликаємо функцію рівнів гри
+        NextLevels(num_level);
+
+
+        /*----------------ЛОГІКА ГРИ-------------------*/
+
+        //функція руху зорельота
+        function MoveUpDown(){
+          //початкове положення зорельота
+          var top_position = $(window).height()/2 - 72;
+          //максимальне нижнє положення зорельота
+          var height_window = $(window).height() - 183;
+          //позиція зорельота по x
+          var x_position = $(window).width()/4;
+
+          //задаємо початкове положення зорельота
+          $("#kosmolet").offset({top:top_position, left:x_position});
+          //обробляємо натискання клавіш клавіатури по всьому документу
+          $(document).keydown(function(eventObject){
+            //межі ружу зорельота
+            if((top_position > 0)&&(top_position < height_window)){
+              //Пкерувати кораблем можна тільки якщо не протиснута пауза
+              if(stop != true){
+                //взнаємо по якій клавіші відбувся натиск і змінюємо відповідно положення зорельота
+                switch(eventObject.which){
+                  //клавіша вгору
+                  case 38:
+                    top_position = top_position - 20;
+                    break;
+                  //клавіша вниз
+                  case 40:
+                    top_position = top_position + 20;
+                    break;
+                }
+              }
+
+              //кожний раз при натиску на клавіші задаємо нове положення зорельота
+              $("#kosmolet").offset({top:top_position, left:x_position});
+
+              //якщо позиція зорельота виходе за межі його руху то корегуємо його позицію
+              }else{
+                //корегування верхньої позиції
+                if(top_position <= 0){
+                  top_position = 1;
+                  //корегування нижньої позиції
+                }else if(top_position >= height_window){
+                  top_position = height_window-1;
+                }
+              }
+          });
+        }
+
+        //добавлення метеорів на ігрове поле
+        function AddMeteors(count_meteors, mass_num_meteors){
+          //визначаємо ширину вікна браузера
+          var x = $(window).width();
+          //за допомогою цикла добавляємо count_meteors метеоритів
+          for(var i = 0; i < count_meteors; i++){
+            //генеруємо випадкове число y координати розташування метеорита
+            var y = Math.floor(Math.random() * $(window).height());
+            //вибираєм випадкові метеорити із масива mass_num_meteors доступних
+            var rand = Math.floor(Math.random() * mass_num_meteors.length);
+            var num_meteor = mass_num_meteors[rand];
+            //у змінну meteor зберігаємо html елемент метеорита
+            var meteor = "<img id='meteor' src='meteors/m"+num_meteor+".png' mass='"+num_meteor+"'>";
+            //добавляємо метеорити на робоче поле
+            $("body").prepend(meteor);
+            //задаємо метеориту відповідне положення
+            $("#meteor").offset({top:y, left:x});
+          }
+        }
+
+        //функция генерування випадкових чисел
+        function getRandomInt(min, max){
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        //функція руху метеоритів
+        function MoveMeteors(speed_meteors_min, speed_meteors_max){
+          //визначаємо ширину вікна браузера
+          var s = $(window).width()+300;
+          //визначаємо середнє можливе значення швидкості руху метеоритів
+          var middle_speed_meteors = ((speed_meteors_max-speed_meteors_min)/2) + speed_meteors_min;
+          //створюємо діапазон швидкостей, щоб рандомна швидкість була більш різнобразною
+          var previus_speed_meteors_max = middle_speed_meteors+2000;
+          var previus_speed_meteors_min = middle_speed_meteors-2000;
+
+          //перебираємо всі метеорити
+          $("body > #meteor").each(function(){
+          //if(stop != true){
+            do{
+              //генеруємо випадкову швидкість
+              var speed_meteors = getRandomInt(speed_meteors_min, speed_meteors_max);
+              //згенерована швидкість має бути більша або менша від попереднього числа
+            }while((speed_meteors > previus_speed_meteors_max)&&(speed_meteors < previus_speed_meteors_min));
+
+            //анімуємо рух метеоритів, при закінченні анімації видаляємо метеорит
+            $(this).animate({ marginLeft: -s}, speed_meteors,
+              function () {
+                $(this).remove();
+            });
+            //змінюємо значення попередньої швидкості
+            previus_speed_meteors_max = speed_meteors+2000;
+            previus_speed_meteors_min = speed_meteors-2000;
+          //}
+          });
+        }
+
+        //функція для обрахунку зіткнень метеоритів з кораблем
+        function Udar(interval, level_time, power_schit){
+          var check_fon_music = 0;
+          //номер зображення щита
+          var n_schit = 1;
+          //присвоюємо початкову потужність щита
+          var new_power = power_schit;
+          //повторюємо даний код з інтервалом interval сек
+          var timerId = setInterval(function() {
+              //визначаєм і моніторим кожні interval секунд координати зорельота
+              var obj_kosmolet = $("#kosmolet");
+              var x1 = obj_kosmolet.offset().left;
+              var y1 = obj_kosmolet.offset().top;
+              var h1 = obj_kosmolet.height();
+              var w1 = obj_kosmolet.width();
+
+            //визначаємо і моніторимо аналогічно зорельоту координати кожного метеорита на ігровому полі
+            $("body>#meteor").each(function(){
+              var x2 = $(this).offset().left;
+              var y2 = $(this).offset().top;
+              var h2 = $(this).height();
+              var w2 = $(this).width();
+
+              //координати
+              var y1_1 = (y1+h1)+$(this).height()-5;
+              var x1_1 = x1+w1;
+              var y2_2 = y2+h2;
+              var y1_corect = y1-$(this).height()-5;
+
+              //умова зіткнення метеорита з кораблем
+              if((y2 > y1_corect)&&(y2_2<y1_1)&&(x2<x1_1)&&(x2>x1)){
+                //програємо звук удару з метеоритом
+                $("#udar").get(0).play();
+                //видаляємо зображення метеорита
+                $(this).remove();
+                //взнаєм масу метеорита
+                var mass = $(this).attr("mass");
+                //зменшуємо потужність щита віднявши масу метеорита з яким зіткнувся корабель
+                new_power = new_power - mass;
+                //дізнаємося результат потужності щита в процентах (0-100%)
+                var pover_in_procent = (new_power*100)/power_schit;
+                //console.log(pover_in_procent);
+
+                if(pover_in_procent >= 0){
+                  $("#power_schit").text(pover_in_procent+"%");
+                }else{
+                  $("#power_schit").text("0%");
+                }
+
+                $("#shcala_scita").width(pover_in_procent+"%");
+
+
+                //в залежності від потужності щита змінюємо відповідне зображення
+                $("#kosmolet").attr("src", "images/avalon"+n_schit+".png");
+                //console.log(n_schit);
+
+                if((pover_in_procent < 85)&&(pover_in_procent > 70)){
+                  n_schit = 2;
+                  $("#shcala_scita").attr("color","yellow");
+                  if(check_fon_music == 0){
+                    $("#fon_music").attr("src", "audio/medium_1.wav");
+                    check_fon_music = 1;
+                  }
+                }else if((pover_in_procent < 70)&&(pover_in_procent > 55)){
+                  n_schit = 3;
+                  $("#shcala_scita").attr("color","gold");
+                }else if((pover_in_procent < 55)&&(pover_in_procent > 40)){
+                  n_schit = 4;
+                  $("#shcala_scita").attr("color","orange");
+
+                  if(check_fon_music == 1){
+                    $("#fon_music").attr("src", "audio/medium_2.wav");
+                    check_fon_music = 0;
+                  }
+                }else if((pover_in_procent < 40)&&(pover_in_procent > 25)){
+                  n_schit = 5;
+                  $("#shcala_scita").attr("color","darkOrange");
+
+                  if(check_fon_music == 0){
+                    $("#fon_music").attr("src", "audio/low.wav");
+                    check_fon_music = 1;
+                  }
+                }else if((pover_in_procent < 25)&&(pover_in_procent > 10)){
+                  n_schit = 6;
+                  $("#shcala_scita").attr("color","coral");
+                }else if((pover_in_procent < 10)&&(pover_in_procent > 1)){
+                  n_schit = 7;
+                  $("#shcala_scita").attr("color","OrangeRed");
+                }else if((pover_in_procent < 1)&&(pover_in_procent > -1)){
+                  n_schit = 7;
+                  $("#shcala_scita").attr("color","Red");
+                }else if(pover_in_procent < 0){
+                  alert("Миссия провалена...");
+                  location.reload();
+                }
+
+              }
+            });
+
+          }, interval);
+          //закінчуємо моніторити координати по закінченню рівня
+          setTimeout(function() {
+              clearInterval(timerId);
+          }, level_time);
+        }
+
+        //функція струтури рівня (передаючи різні параметри у функцію можна ускладнити рівень)
+        function Level(mass_num_meteors, _min_count_meteors, _max_count_meteors, speed_meteors_min, speed_meteors_max, interval, level_time){
+          var check = 1;
+          var num_period_add_meteors = (level_time/interval)-1;
+          //значення кількості метеоритів які будуть передані в генератор випадкових чисел
+          var min_count_meteors = _min_count_meteors;
+          var max_count_meteors = _max_count_meteors;
+
+          //повторюємо даний код з інтервалом interval сек
+          timerId = setInterval(function() {
+          //генеруємо випадкове число метеоритів з указаного діапазону
+          var count_meteors = getRandomInt(min_count_meteors, max_count_meteors);
+            //призупиняємо спрацьовування даного коду під час паузи
+            if(stop != true){
+              if(check != num_period_add_meteors){
+                //добавляємо метеорити на ігрове поле
+                AddMeteors(count_meteors, mass_num_meteors);
+                //починаємо їх рухати
+                MoveMeteors(speed_meteors_min, speed_meteors_max);
+                check++;
+                //з кожним інтервалом збільшуємо кількість метеоритів
+                max_count_meteors++;
+              }
+            }
+          }, interval);
+
+          // через level_time сек зупиняємо повтори попереднього коду
+          setTimeout(function() {
+            if(stop != true){
+            clearInterval(timerId);
+            alert( 'Вы пройшли уровень, для продолжения нажмите [ОК]' );
+            num_level++;
+            $("#level").text(num_level);
+            //номер зображення щита
+            $("#kosmolet").attr("src", "images/avalon1.png");
+            $("#power_schit").text("100%");
+            $("#shcala_scita").width("100%");
+            $("#shcala_scita").attr("color","green");
+            NextLevels(num_level);
+
+          }
+          }, level_time);
+        }
+
+        function NextLevels(){
+
+          var scan_play_game;
+
+          var interval = 2000;
+          var level_time = 20000;
+
+
+
+
+          //параметри рівня
+          var mass_num_meteors = [1,2];
+          var min_count_meteors = 1;
+          var max_count_meteors = 1 ;
+          var speed_meteors_min = 8000;
+          var speed_meteors_max = 5000;
+          //var interval = 4000;
+          //var level_time = 120000;
+          var power_schit = 30;
+
+
+
+
+
+
+
+          switch(num_level){
+            case 1:
+            time = 0;
+            result_time = 0;
+              mass_num_meteors = [1,2];
+              min_count_meteors = 1;
+              max_count_meteors = 1 ;
+              speed_meteors_min = 10000;
+              speed_meteors_max = 5000;
+              interval = 2000;
+              level_time = 20000;
+              power_schit = level_time/interval;
+              $("body").attr("background", "fons/fon1.jpg");
+              Level(mass_num_meteors, min_count_meteors, max_count_meteors, speed_meteors_min, speed_meteors_max, interval, level_time);
+              Udar(100, level_time, power_schit);
+              break;
+            case 2:
+            time = 0;
+            result_time = 0;
+              mass_num_meteors = [1,2,3];
+              min_count_meteors = 1;
+              max_count_meteors = 1 ;
+              speed_meteors_min = 20000;
+              speed_meteors_max = 10000;
+              interval = 2000;
+              level_time = 20000;
+              power_schit = level_time/interval;
+              $("body").attr("background", "fons/fon2.jpeg");
+              Level(mass_num_meteors, min_count_meteors, max_count_meteors, speed_meteors_min, speed_meteors_max, interval, level_time);
+              Udar(100, level_time, power_schit);
+              break;
+            case 3:
+            time = 0;
+            result_time = 0;
+              mass_num_meteors = [1,2,3];
+              min_count_meteors = 1;
+              max_count_meteors = 1 ;
+              speed_meteors_min = 18000;
+              speed_meteors_max = 8000;
+              interval = 2000;
+              level_time = 20000;
+              power_schit = level_time/interval;
+              $("body").attr("background", "fons/fon3.jpg");
+              Level(mass_num_meteors, min_count_meteors, max_count_meteors, speed_meteors_min, speed_meteors_max, interval, level_time);
+              Udar(100, level_time, power_schit);
+              break;
+            case 4:
+            time = 0;
+            result_time = 0;
+              mass_num_meteors = [1,2,3];
+              min_count_meteors = 1;
+              max_count_meteors = 1 ;
+              speed_meteors_min = 16000;
+              speed_meteors_max = 6000;
+              interval = 2000;
+              level_time = 20000;
+              power_schit = level_time/interval;
+              $("body").attr("background", "fons/fon4.jpg");
+              Level(mass_num_meteors, min_count_meteors, max_count_meteors, speed_meteors_min, speed_meteors_max, interval, level_time);
+              Udar(100, level_time, power_schit);
+              break;
+          }
+
+
+
+
+
+          //обробник події запуску паузи
+          $("#sleep").click(function(){
+            clearInterval(scan_play_game);
+            clearInterval(timerId);
+            //призупиняємо набір анімацій
+            $("body > #meteor").stop(true);
+            //задаємо змінній паузи значення true, тобто пауза здійснена
+            stop = true;
+            //зберігаємо шлях до поточної мелодії
+            sound = $("#fon_music").attr("src");
+            //видаляємо шлях до мелодії щоб призупинити програвання фрейму
+            $("#fon_music").attr("src", "");
+            //задаємо сповіщення екрану паузи
+            $("#message_window").text("Пауза");
+            //робимо вікно паузи видимим
+            $(".pause").css({visibility:'visible'});
+          });
+
+
+          //обробник події продовження гри
+          $("#continue").click(function(){
+            //відновлюємо анімацію
+            $("body > #meteor").stop(false);
+            //змінюємо значення змінной паузи (пауза вимкнена)
+            stop = false;
+            //підключаєм музику що грала
+            $("#fon_music").attr("src", sound);
+
+            $(".pause").css({visibility:'hidden'});
+
+            result_time = level_time - time;
+            console.log("Після паузи:");
+            console.log("час = "+result_time);
+            //викликаємо функцію рівнів гри
+
+            Level(mass_num_meteors, min_count_meteors, max_count_meteors, speed_meteors_min, speed_meteors_max, interval, result_time);
+            Udar(100, result_time, power_schit);
+
+            //time = 0;
+            //result_time = 0;
+
+
+
+          });
+
+
+
+
+          scan_play_game = setInterval(function(){
+            time = time + interval;
+            console.log("time = "+time);
+          }, interval);
+
+
+
+      }
+
+    });
+    </script>
+  </body>
+</html>
